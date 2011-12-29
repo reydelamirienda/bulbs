@@ -7,7 +7,7 @@ import os
 import inspect
 
 
-def initialize_element(resource,result):
+def initialize_element(resource, result):
     # result should be a single Result object, not a list or generator
     element_class = get_element_class(resource,result)
     element = element_class(resource)
@@ -55,9 +55,12 @@ def get_one_result(resp):
     # even if the list only contains one element, and the Response object
     # converts all lists to a generator of Result objects. Thus in that case,
     # we need to grab the single Result object out of the list/generator.
+    print resp
     if resp.total_size > 1:
         raise ValueError('resp.results contains more than one item.')
-    if inspect.isgenerator(resp.results):
+    elif resp.total_size == 0:
+        return None
+    elif inspect.isgenerator(resp.results):
         result = resp.results.next()
     else:
         result = resp.results

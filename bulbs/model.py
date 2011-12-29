@@ -11,6 +11,9 @@ from bulbs.property import Property
 from bulbs.element import Vertex, VertexProxy, Edge, EdgeProxy
 from bulbs.utils import initialize_element, get_one_result
 
+import logging
+log = logging.getLogger(__name__)
+
 # utility function used by NodeProxy and RelationshipProxy
 def instantiate_model(element_class,resource,kwds):
     model = element_class(resource)
@@ -88,10 +91,10 @@ class Model(object):
             # Notice that __setattr__ is overloaded
             value = self._resource.type_system.to_python(property_instance,value)
             setattr(self,key,value)
-        except:
+        except Exception as ex:
             # TODO: log/warn/email regarding type mismatch
+            log.error("Setting property '%s' with value '%s': %s", key, value, ex)
             setattr(self,key,None)        
-
 
     def _get_property_data(self):
         """Returns Property data ready to be saved in the DB."""
@@ -215,7 +218,9 @@ class RelationshipProxy(EdgeProxy):
         relationship = instantiate_model(self.element_class,self.resource,kwds)
         outV, label, inV = self._parse_args(relationship,args)
         data = relationship._get_property_data()
+        log.debug("DATA: %s", data)
         resp = relationship._create(outV,label,inV,data)
+        log.debug("RESP: %s", resp.raw)
         result = get_one_result(resp)
         return initialize_element(self.resource,result)
 

@@ -11,6 +11,8 @@ Graph, Vertex, Edge, Index, Query
 """
 #import array
 
+import logging;
+log = logging.getLogger(__name__)
 
 # NOTE 1: "Property" refers to a graph-database property (i.e. the DB data)
 class Property(object):
@@ -54,23 +56,24 @@ class Property(object):
                 # should this be "assert value is True" to catch empties?
                 assert value is not None
         except AssertionError:
-            print "Cannot set '%s' to %s: '%s' is a Property with nullable set to False" \
-                % (key, value, key)
+            log.error("Cannot set '%s' to %s: '%s' is a Property with nullable set to False", \
+                key, value, key)
             raise
 
     def coerce_value(self,key,value):
         initial_datatype = type(value)
         try:
             python_type = self.datatype.python_type
-            value = python_type(value)
+            if python_type != initial_datatype:
+                value = python_type(value)
             return value
         except ValueError:
-            print "'%s' is not a valid value for %s, must be  %s." \
-                           % (value, key, python_type)
+            log.error("'%s' is not a valid value for %s, must be  %s.", \
+                           value, key, python_type)
             raise
         except AttributeError:
-            print "Can't set attribute '%s' to value '%s with type %s'" \
-                % (key,value,initial_datatype)
+            log.error("Can't set attribute '%s' to value '%s with type %s'", \
+                key,value,initial_datatype)
             raise
 
 #

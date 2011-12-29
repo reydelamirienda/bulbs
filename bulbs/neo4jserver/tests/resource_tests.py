@@ -16,7 +16,6 @@ class Neo4jIndexTestCase(unittest.TestCase):
     
     def setUp(self):
         config = Config(NEO4J_URI)
-        config.debug = True
         self.resource = Neo4jResource(config)
 
     #
@@ -75,7 +74,6 @@ class TryTestCase(unittest.TestCase):
     
     def setUp(self):
         config = Config(NEO4J_URI)
-        config.debug = True
         self.resource = Neo4jResource(config)
 
     #def test_warm_cache(self):

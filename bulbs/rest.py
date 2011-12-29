@@ -9,6 +9,9 @@ returning a Response object.
 
 """
 
+import logging
+log = logging.getLogger(__name__)
+
 import urllib
 import httplib2
 import ujson as json
@@ -104,10 +107,10 @@ class Request(object):
                        when you instantiated the resource.
         :param params: a dict of query-string parameters to include in the URL 
         """
-        uri, method, body, headers = self._build_request_args(path, method, params)
 
-        if self.config.debug is True:
-            self._display_debug(uri, method, body)
+        uri, method, body, headers = self._build_request_args(path,method,params)
+
+        self._display_debug(uri,method,body,headers)
        
          # "retry code" moved to _retry_request method for now. - James  
         http_resp = self.http.request(uri, method, body, headers)
@@ -115,11 +118,10 @@ class Request(object):
         #print http_resp
         return self.response_class(http_resp)
 
-    def _display_debug(self, uri, method, body):
-        print "%s url:  %s  " % (method, uri)
-        print "%s body: %s " % (method, body)        
-        print  # print blank line between requests
-                
+    def _display_debug(self,uri,method,body,headers):
+        log.debug("%s url:  %s", method, uri)
+        log.debug("%s body: %s", method, body)        
+
     def _build_request_args(self, path, method, params):
         headers = {'Accept': 'application/json'}
         body = None

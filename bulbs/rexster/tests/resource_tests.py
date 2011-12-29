@@ -18,7 +18,6 @@ class RexsterIndexTestCase(unittest.TestCase):
 
     def setUp(self):
         config = Config(REXSTER_URI)
-        config.debug = True
         self.resource = RexsterResource(config)
 
     #
@@ -86,7 +85,6 @@ class RexsterAutomaticIndexTestCase(unittest.TestCase):
     
     def setUp(self):
         config = Config(REXSTER_URI)
-        config.debug = True
         self.resource = RexsterResource(config)
 
     def test_create_automatic_vertex_index(self):

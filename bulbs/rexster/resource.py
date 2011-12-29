@@ -135,7 +135,6 @@ class RexsterResource(Resource):
 
         """
         self.config = config
-        self.config.debug = True
         self.registry = Registry(config)
         self.scripts = Scripts() 
         dir_name = os.path.dirname(__file__)

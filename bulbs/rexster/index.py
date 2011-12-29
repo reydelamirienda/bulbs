@@ -10,6 +10,9 @@ An interface for interacting with indices on Rexster.
 
 from bulbs.utils import initialize_element, initialize_elements, get_one_result
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class VertexIndexProxy(object):
     """

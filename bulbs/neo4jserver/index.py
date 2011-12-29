@@ -177,12 +177,8 @@ class ExactIndex(Index):
         result = utils.get_one_result(resp)
         return initialize_element(self.resource,result)
 
-
-
-         
     def query(self,query_string):
         pass
-
 
     def remove(self,_id,key=None,value=None,**pair):
         """Remove the element from the index located by key/value."""

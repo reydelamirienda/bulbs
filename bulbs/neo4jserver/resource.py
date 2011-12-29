@@ -183,7 +183,6 @@ class Neo4jResource(Resource):
 
         """
         self.config = config
-        self.config.debug = False
         self.registry = Registry(config)
         self.scripts = Scripts()
         dir_name = os.path.dirname(__file__)
