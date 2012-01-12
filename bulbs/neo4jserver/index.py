@@ -174,7 +174,7 @@ class ExactIndex(Index):
         """Returns a max of 1 elements matching the key/value pair in the index."""
         key, value = self._parse_args(key,value,pair)
         resp = self.resource.lookup_vertex(self.index_name,key,value)
-        result = utils.get_one_result(resp)
+        result = get_one_result(resp)
         return initialize_element(self.resource,result)
 
     def query(self,query_string):
