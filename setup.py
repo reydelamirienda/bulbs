@@ -63,6 +63,7 @@ setup (
     long_description = __doc__,
     keywords = "graph database DB persistence framework rexster gremlin cypher neo4j orientdb",   
     packages = find_packages(),
+    include_package_data=True,
     zip_safe=False,
     platforms='any',
     install_requires=[
