@@ -348,9 +348,9 @@ class Neo4jResource(Resource):
     def _get_index_results(self,index_name,resp):
         # this is pretty much a hack becuase the way neo4j does this is inconsistent
         results = None   # for clarity
-        result = resp.content
-        if index_name in result:
-            result = result[index_name]
+        content = resp.content
+        if content and index_name in content:
+            result = content[index_name]
             result['name'] = index_name
             results = Neo4jResult(result)
         return results
