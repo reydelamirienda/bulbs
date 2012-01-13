@@ -27,11 +27,17 @@ class ModelMeta(type):
     def __init__(cls, name, base, namespace):
         # store the Property definitions on the class as a dictionary mapping
         # the Property name to the Property instance
-        cls._properties = {}
+        if not hasattr(cls, '_properties'):
+            # Model doesn't have any registered properties
+            cls._properties = {}
+        else:
+            # Inherit properties and add more
+            cls._properties = cls._properties.copy()
         for key, value in namespace.items():
             # loop through the class namespace looking for Property instances
             # e.g. age = Property(Integer,default=None)
             # key: age, value: Property(Integer,default=None)
+            assert key not in cls._properties, "Can't redefine property '%s'" % key
             if isinstance(value, Property):
                 property_instance = value     # (for clarity)
                 cls._register_property(key,property_instance)
