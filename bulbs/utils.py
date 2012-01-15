@@ -48,8 +48,12 @@ def get_element_key(resource,result):
     
 def get_element_class(resource,result):
     #element_type = get_element_type(resource,result)
+    base_key = result.get_type()
     element_key = get_element_key(resource,result)
-    element_class = resource.registry.get_class(element_key)
+    try:
+        element_class = resource.registry.get_class(element_key)
+    except KeyError:
+        element_class = resource.registry.get_class(base_key)
     return element_class
 
  
