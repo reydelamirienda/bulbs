@@ -17,6 +17,7 @@ log = logging.getLogger(__name__)
 # utility function used by NodeProxy and RelationshipProxy
 def instantiate_model(element_class,resource,kwds):
     model = element_class(resource)
+    model._set_default_values()
     model._set_keyword_attributes(kwds)
     return model
 
@@ -41,7 +42,8 @@ class ModelMeta(type):
             if isinstance(value, Property):
                 property_instance = value     # (for clarity)
                 cls._register_property(key,property_instance)
-                cls._set_property_default(key,property_instance)
+                delattr(cls, key)
+                #cls._set_property_default(key,property_instance)
 
     def _register_property(cls,key,property_instance):
         # Property name will be none unless explicitly set via kwd param
@@ -49,47 +51,68 @@ class ModelMeta(type):
             property_instance.name = key
         cls._properties[key] = property_instance
 
-    def _set_property_default(cls,key,property_instance):
-        # now that the property reference is stored away, 
-        # initialize its vars to None, the default vale (TODO), or the fget
-        if property_instance.default:
-            #TODO: Make this work for scalars too
-            fget = getattr(cls,value.default)
-            default_value = property(fget)
-        elif property_instance.fget:
-            # wrapped fset and fdel in str() to make the default None work with getattr
-            fget = getattr(cls,property_instance.fget)
-            fset = getattr(cls,str(property_instance.fset),None)
-            fdel = getattr(cls,str(property_instance.fdel),None)
-            default_value = property(fget,fset,fdel)
-        else:
-            default_value = None
-        setattr(cls,key,default_value)
+    #def _set_property_default(cls,key,property_instance):
+    #    # now that the property reference is stored away, 
+    #    # initialize its vars to None, the default vale (TODO), or the fget
+    #    if property_instance.default:
+    #        #TODO: Make this work for scalars too
+    #        fget = getattr(cls,property_instance.default)
+    #        default_value = property(fget)
+    #    elif property_instance.fget:
+    #        # wrapped fset and fdel in str() to make the default None work with getattr
+    #        fget = getattr(cls,property_instance.fget)
+    #        fset = getattr(cls,str(property_instance.fset),None)
+    #        fdel = getattr(cls,str(property_instance.fdel),None)
+    #        default_value = property(fget,fset,fdel)
+    #    else:
+    #        default_value = None
+    #    setattr(cls,key,default_value)
 
     
 class Model(object):
 
     __metaclass__ = ModelMeta
-
+    
     def __setattr__(self, key, value):
         if key in self._properties:
-            if value:
+            value = self._get_coerced_value(key,value)
+            self[key] = value
+        else:
+            super(Model, self).__setattr__(key, value)
+    
+    def __getattr__(self, key):
+        if key in self._properties:
+            return self[key]
+        else:
+            raise AttributeError("%s is not an attribute nor is defined as property" % key)
+    
+    def _get_coerced_value(self, key, value):
+        if key in self._properties:
+            if value is not None:
                 property_instance = self._properties[key]
                 value = property_instance.coerce_value(key,value)
-        super(Model, self).__setattr__(key, value)
-                
-    def _set_keyword_attributes(self,kwds):
+        return value
+    
+    def _set_keyword_attributes(self, kwds):
         for key, value in kwds.iteritems():
             # Notice that __setattr__ is overloaded
             setattr(self,key,value)
+    
+    def _set_default_values(self):
+        for key, property_instance in self._properties.items():
+            if property_instance.default:
+                value = property_instance.default
+            else:
+                value = None
+            setattr(self,key,value)
 
-    def _set_property_data(self,result):
+    def _set_property_data(self):
         """
         Sets Property data when an element is being initialized, after it is
         retrieved from the DB -- we set it to None if it won't set.        
         """
         for key, property_instance in self._properties.items():
-            value = result.data.get(key,None)
+            value = getattr(self,key)
             self._set_property_from_db(property_instance,key,value)
 
     def _set_property_from_db(self,property_instance,key,value):
@@ -108,10 +131,13 @@ class Model(object):
         type_var = self._resource.config.type_var
         if hasattr(self,type_var):
             data[type_var] = getattr(self,type_var)
-        for key, property_instance in self._properties.items():
-            value = getattr(self,key)
-            property_instance.validate(key,value)
-            data[key] = self._resource.type_system.to_db(value)
+        for key in self:
+            value = self[key]
+            if key in self._properties:
+                property_instance = self._properties[key]
+                property_instance.validate(key,value)
+                value = self._resource.type_system.to_db(value)
+            data[key] = value
         return data
 
     def _get_index(self,index_name):
@@ -133,7 +159,7 @@ class Node(Vertex,Model):
         # putting it here to ensure method resolution order
         Vertex._initialize(self,result)
         element_type = self._get_element_type()
-        self._set_property_data(result)
+        self._set_property_data()
         self._index = self._get_index(element_type)
 
     def _get_element_type(self):
@@ -173,7 +199,7 @@ class Relationship(Edge,Model):
         # putting it here to ensure method resolution order
         Edge._initialize(self,result)
         label = self._get_label()
-        self._set_property_data(result)
+        self._set_property_data()
         self._index = self._get_index(label)
 
     def _get_label(self):

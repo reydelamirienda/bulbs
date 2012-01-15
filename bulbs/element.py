@@ -26,12 +26,14 @@ class Element(object):
         # NOTE: Put all the init stuff in initialize_element() because 
         # Model() calls it explicitly instead of super().__init__()
         #self._initialize_element(resource,result)
+        self.__dict__["_data"] = {}
         self._resource = resource
 
     def _initialize(self,result):
         # Reource object and Result object
         self._result = result
-        self._set_pretty_vars(self._resource)
+        self._data = result.data
+        #self._set_pretty_vars(self._resource)
         self._vertices = VertexProxy(Vertex,self._resource)
         self._edges = EdgeProxy(Edge,self._resource)
         #print "TTTTT", type(self._resource)
@@ -43,33 +45,28 @@ class Element(object):
     @property 
     def _type(self):
         return self._result.get_type()
+    
+    def __setitem__(self, key, value=None):
+        """
+        Create and assign a new property of an Element that will be persisted.
+        Once it's created, it can be changed by __setattr__ with obj.prop = value.
+        """
+        self._data[key] = value
+    
+    def __getitem__(self, key):
+        """
+        Return a property of en Element.
+        """
+        return self._data[key]
 
-    #
-    # First Thing: Fix this self.__class__ should be self but it breaks stuff
-    # property must be set on the class, not the object
-    #
-
-    def _set_pretty_vars(self,resource):
-        self._set_python_property(resource.config.id_var,"_id")
-        # this won't work b/c element_type and label are set as class vars
-        #self._set_python_property(resource.config.type_var,"_type")
-        #self._set_python_property(resource.config.label_var,"_label")
-
-    def _set_python_property(self,pretty_var,ugly_var):
-        fget = lambda x: getattr(self,ugly_var)
-        setattr(self.__class__,pretty_var,property(fget))                    
-
-    def __getattr__(self,attribute):
-        try:
-            return self._result.data[attribute]
-        except:
-            raise AttributeError("%s is not defined and is not in Result data" % attribute)
-
+    def __iter__(self):
+        return self._data.__iter__()
+    
     def __len__(self):
-        return len(self._result.data)
+        return len(self._data)
 
     def __contains__(self, item):
-        return item in self._result.data
+        return item in self._data
 
     def __eq__(self, obj):
         return (hasattr(obj, "__class__") and
@@ -77,7 +74,7 @@ class Element(object):
                 hasattr(self, "_result") and 
                 hasattr(obj, "_result") and
                 self._result.get_id() == obj._result.get_id() and
-                self._result.data == obj._result.data
+                self._data == obj._data
                 )
 
     def __ne__(self, obj):
@@ -94,7 +91,7 @@ class Element(object):
 
     def map(self):
         """Returns a dict of the element's data that's stored in the DB."""
-        return self._result.data
+        return self._data
 
 
 class Vertex(Element):
@@ -129,7 +126,10 @@ class Vertex(Element):
         """Return all incoming- and outgoing-adjacent vertices of vertex."""
         resp = self._resource.bothV(self._id,label)
         return initialize_elements(self._resource,resp)
-
+    
+    def save(self):
+        """Save the vertex's data back to the database"""
+        return self._vertices.update(self._id, self._data)
 
 class Edge(Element):
     """A container for Edge elements returned by the resource."""
@@ -157,6 +157,10 @@ class Edge(Element):
     def inV(self):
         """Returns the incoming Vertex of the edge."""
         return self._vertices.get(self._inV)
+    
+    def save(self):
+        """Save the edge's data back to the database"""
+        return self._edges.update(self._id, self._data)
 
 
 class VertexProxy(object):
