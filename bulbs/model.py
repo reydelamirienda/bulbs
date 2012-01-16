@@ -112,7 +112,7 @@ class Model(object):
         retrieved from the DB -- we set it to None if it won't set.        
         """
         for key, property_instance in self._properties.items():
-            value = getattr(self,key)
+            value = getattr(self,key,property_instance.default)
             self._set_property_from_db(property_instance,key,value)
 
     def _set_property_from_db(self,property_instance,key,value):
