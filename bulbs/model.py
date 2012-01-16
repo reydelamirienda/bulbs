@@ -112,7 +112,7 @@ class Model(object):
         retrieved from the DB -- we set it to None if it won't set.        
         """
         for key, property_instance in self._properties.items():
-            value = getattr(self,key,property_instance.default)
+            value = getattr(self,key)
             self._set_property_from_db(property_instance,key,value)
 
     def _set_property_from_db(self,property_instance,key,value):
@@ -159,6 +159,7 @@ class Node(Vertex,Model):
         # putting it here to ensure method resolution order
         Vertex._initialize(self,result)
         element_type = self._get_element_type()
+        self._set_default_values()
         self._set_property_data()
         self._index = self._get_index(element_type)
 
@@ -199,6 +200,7 @@ class Relationship(Edge,Model):
         # putting it here to ensure method resolution order
         Edge._initialize(self,result)
         label = self._get_label()
+        self._set_default_values()
         self._set_property_data()
         self._index = self._get_index(label)
 
