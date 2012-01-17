@@ -21,7 +21,6 @@ class Cypher(object):
         
     def query(self, query, params=None):
         resp = self.resource.cypher(query,params)
-        import pdb; pdb.set_trace()
         return initialize_elements(self.resource, resp)
 
 
