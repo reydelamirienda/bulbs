@@ -153,8 +153,13 @@ class Neo4jResponse(Response):
             # and self.content != "null":
             # Yep, the null thing is sort of a hack. 
             # Neo4j returns "null" if Gremlin scripts don't return anything.
-            results = self.result_class(self.content)
-            total_size = 1
+            if 'columns' in self.content:
+                # Cypher response
+                results = (self.result_class(result[0]) for result in self.content['data'])
+                total_size = len(self.content['data'])
+            else:
+                results = self.result_class(self.content)
+                total_size = 1
         else:
             results = None
             total_size = 0
