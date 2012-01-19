@@ -95,16 +95,20 @@ class Model(object):
     
     def _set_keyword_attributes(self, kwds):
         for key, value in kwds.iteritems():
-            # Notice that __setattr__ is overloaded
-            setattr(self,key,value)
+            if key in self._properties:
+                # Notice that __setattr__ is overloaded
+                setattr(self,key,value)
+            else:
+                self[key] = value
     
     def _set_default_values(self):
         for key, property_instance in self._properties.items():
-            if property_instance.default:
-                value = property_instance.default
-            else:
-                value = None
-            setattr(self,key,value)
+            if key not in self:
+                if property_instance.default:
+                    value = property_instance.default
+                else:
+                    value = None
+                setattr(self, key, value)
 
     def _set_property_data(self):
         """
@@ -223,6 +227,7 @@ class Relationship(Edge,Model):
 class NodeProxy(VertexProxy):
 
     def create(self,*args,**kwds):
+        import pdb; pdb.set_trace()
         node = instantiate_model(self.element_class,self.resource,kwds)
         data = node._get_property_data()
         resp = node._create(data,self.index)
